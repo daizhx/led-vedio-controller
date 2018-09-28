@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_signal_source"
+        android:icon="@drawable/ic_hdmi"
+        android:title="@string/signal_resource" />
+
+    <!--<item-->
+        <!--android:id="@+id/navigation_function"-->
+        <!--android:icon="@drawable/ic_dashboard_black_24dp"-->
+        <!--android:title="@string/function" />-->
+
+    <item
+        android:id="@+id/navigation_pre_setting"
+        android:icon="@drawable/ic_save"
+        android:title="@string/pre_setting" />
+
+    <item
+        android:id="@+id/navigation_setting"
+        android:icon="@drawable/ic_setting"
+        android:title="@string/setting" />
+</menu>

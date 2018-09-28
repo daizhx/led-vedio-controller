@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.SignalSourceFragment">
+
+    <android.support.v7.widget.GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        app:columnCount="3"
+        app:rowCount="3">
+
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="CV"
+            android:id="@+id/btn_cv" />
+
+
+        <!--<Button-->
+            <!--style="@style/GridButton"-->
+            <!--app:layout_columnWeight="1"-->
+            <!--app:layout_rowWeight="1"-->
+            <!--android:text="CV2"-->
+            <!--android:id="@+id/btn_cv2"-->
+            <!--android:onClick="onClick"/>-->
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="VGA"
+            android:id="@+id/btn_vga"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="DP1"
+            android:id="@+id/btn_dp1"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="DP2"
+            android:id="@+id/btn_dp2"/>
+
+        <!--<Button-->
+            <!--style="@style/GridButton"-->
+            <!--app:layout_columnWeight="1"-->
+            <!--app:layout_rowWeight="1"-->
+            <!--android:text="DVI2"-->
+            <!--android:id="@+id/btn_dvi2"/>-->
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="HDMI1"
+            android:id="@+id/btn_hdm1_1"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="HDMI2"
+            android:id="@+id/btn_hdm1_2"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="DVI"
+            android:id="@+id/btn_dvi"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="SDI"
+            android:id="@+id/btn_sdi"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="EXT"
+            android:id="@+id/btn_ext"/>
+
+
+    </android.support.v7.widget.GridLayout>
+
+
+
+    <include layout="@layout/layer_view"
+        android:id="@+id/layer_a"/>
+
+    <include layout="@layout/layer_view"
+        android:id="@+id/layer_b"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/layer_btn_gap"/>
+
+    <include layout="@layout/layer_view"
+        android:id="@+id/layer_c"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/layer_btn_gap"/>
+
+    <include layout="@layout/layer_view"
+        android:id="@+id/layer_d"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/layer_btn_gap"/>
+</LinearLayout>
+
+</ScrollView>

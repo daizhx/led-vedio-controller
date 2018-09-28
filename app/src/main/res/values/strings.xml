@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">LED视频处理器</string>
+    <string name="search_device">搜索设备</string>
+    <string name="search_again">重新扫描</string>
+    <string name="signal_resource">信号源</string>
+    <string name="function">功能</string>
+    <string name="pre_setting">预设</string>
+    <string name="setting">设置</string>
+    <string name="device_type">设备选型</string>
+    <string name="language">多语言</string>
+    <string name="light_setting">亮度调节</string>
+    <string name="time_setting">时间校准</string>
+    <string name="reset">机器复位</string>
+    <string name="light">亮度</string>
+    <string name="reset_alert">是否复位机器？</string>
+    <string name="date">日期</string>
+    <string name="time">时间</string>
+    <string name="open_location_hint">未打开手机的位置服务，无法扫描！</string>
+    <string name="location_request">没有位置服务权限，不能扫描</string>
+    <string name="no_device_found">没有扫描到任何设备</string>
+
+    <string-array name="devcie_type">
+        <item>DVP168</item>
+        <item>DVP170</item>
+        <item>DVP980</item>
+    </string-array>
 </resources>

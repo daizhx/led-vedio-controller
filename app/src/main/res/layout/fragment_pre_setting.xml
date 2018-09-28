@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.PreSettingFragment">
+
+    <android.support.v7.widget.GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        app:columnCount="2"
+        app:rowCount="5">
+
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M1"
+            android:id="@+id/btn_m1"/>
+
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M6"
+            android:id="@+id/btn_m6"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M2"
+            android:id="@+id/btn_m2"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M7"
+            android:id="@+id/btn_m7"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M3"
+            android:id="@+id/btn_m3"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M8"
+            android:id="@+id/btn_m8"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M4"
+            android:id="@+id/btn_m4"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M9"
+            android:id="@+id/btn_m9"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M5"
+            android:id="@+id/btn_m5"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="M10"
+            android:id="@+id/btn_m10"/>
+
+
+    </android.support.v7.widget.GridLayout>
+
+</FrameLayout>

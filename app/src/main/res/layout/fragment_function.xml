@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragments.FunctionFragment">
+
+    <android.support.v7.widget.GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:layout_gravity="center"
+        app:columnCount="2"
+        app:rowCount="5">
+
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="PART" />
+
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="FULL"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="PIP"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="BLACK"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="FREEZE"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="FADE"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="CUT"/>
+
+        <Button
+            style="@style/GridButton"
+            app:layout_columnWeight="1"
+            app:layout_rowWeight="1"
+            android:text="LOCK"/>
+
+
+
+    </android.support.v7.widget.GridLayout>
+
+</FrameLayout>
