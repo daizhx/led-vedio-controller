@@ -11,6 +11,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,12 +22,15 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import demo.com.ledvediocontroller.util.SharePreferencesUtil;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     private static final int REQUEST_SCAN = 1;
     private static final int REQUEST_SETTING = 2;
@@ -168,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         if(progressDialog != null){
             progressDialog.dismiss();
         }
-        Toast.makeText(MainActivity.this,"无法连接到设备信号",Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this,"连接AP失败",Toast.LENGTH_SHORT).show();
     }
 
     private void startSettingActivity(String ssid) {
@@ -283,10 +287,10 @@ public class MainActivity extends AppCompatActivity {
         }
         String ssid = apNameList.get(p);
 
-        List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
-        if(list == null){
-            list = new ArrayList<>();
-        }
+//        List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
+//        if(list == null){
+//            list = new ArrayList<>();
+//        }
 
         //是否保存过AP
 //        for (WifiConfiguration wifiConfiguration : list) {
@@ -316,31 +320,29 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        }
 
-        //未保存过AP add conf
-        WifiConfiguration wificonf = createWifiConfig("\"" + ssid   + "\"","\"" + "3.14159265" + "\"",WIFICIPHER_WPA);
+        WifiConfiguration wificonf = createWifiConfig(ssid,"3.14159265",WIFICIPHER_WPA);
         int networkId = mWifiManager.addNetwork(wificonf);
 
-//        WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
         currentNetWorkId = currentWifiInfo.getNetworkId();
-//        boolean b = mWifiManager.disconnect();
-//        if(!b){
+
+//        if(!mWifiManager.disconnect()){
 //            Toast.makeText(MainActivity.this,"断开WIFI操作失败",Toast.LENGTH_SHORT).show();
-//            return;
+//            return false;
 //        }
+
         if(currentNetWorkId != -1) {
             mWifiManager.disableNetwork(currentNetWorkId);
         }
-        boolean b = mWifiManager.enableNetwork(networkId, true);
-        if(!b){
-            Toast.makeText(MainActivity.this,"连接到设备失败",Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        b = mWifiManager.reconnect();
 
-        if(!b){
-            Toast.makeText(MainActivity.this,"连接WIFI操作失败",Toast.LENGTH_SHORT).show();
+        if(!mWifiManager.enableNetwork(networkId, true)){
+            Toast.makeText(MainActivity.this,"无法连接wifi网络"+networkId,Toast.LENGTH_SHORT).show();
             return false;
         }
+
+//        if(!mWifiManager.reconnect()){
+//            Toast.makeText(MainActivity.this,"连接WIFI操作失败",Toast.LENGTH_SHORT).show();
+//            return false;
+//        }
 
         return true;
     }
@@ -452,4 +454,73 @@ public class MainActivity extends AppCompatActivity {
         }
         return config;
     }
+
+
+    /**
+     * 通过反射出不同版本的connect方法来连接Wifi
+     *
+     */
+    private Method connectWifiByReflectMethod(int netId) {
+        Method connectMethod = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            Log.d(TAG, "connectWifiByReflectMethod road 1");
+            // 反射方法： connect(int, listener) , 4.2 <= phone‘s android version
+            for (Method methodSub : mWifiManager.getClass()
+                    .getDeclaredMethods()) {
+                if ("connect".equalsIgnoreCase(methodSub.getName())) {
+                    Class<?>[] types = methodSub.getParameterTypes();
+                    if (types != null && types.length > 0) {
+                        if ("int".equalsIgnoreCase(types[0].getName())) {
+                            connectMethod = methodSub;
+                        }
+                    }
+                }
+            }
+            if (connectMethod != null) {
+                try {
+                    connectMethod.invoke(mWifiManager, netId, null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "connectWifiByReflectMethod Android "
+                            + Build.VERSION.SDK_INT + " error!");
+                    return null;
+                }
+            }
+        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.JELLY_BEAN) {
+            // 反射方法: connect(Channel c, int networkId, ActionListener listener)
+            // 暂时不处理4.1的情况 , 4.1 == phone‘s android version
+            Log.d(TAG, "connectWifiByReflectMethod road 2");
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            Log.d(TAG, "connectWifiByReflectMethod road 3");
+            // 反射方法：connectNetwork(int networkId) ,
+            // 4.0 <= phone‘s android version < 4.1
+            for (Method methodSub : mWifiManager.getClass()
+                    .getDeclaredMethods()) {
+                if ("connectNetwork".equalsIgnoreCase(methodSub.getName())) {
+                    Class<?>[] types = methodSub.getParameterTypes();
+                    if (types != null && types.length > 0) {
+                        if ("int".equalsIgnoreCase(types[0].getName())) {
+                            connectMethod = methodSub;
+                        }
+                    }
+                }
+            }
+            if (connectMethod != null) {
+                try {
+                    connectMethod.invoke(mWifiManager, netId);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "connectWifiByReflectMethod Android "
+                            + Build.VERSION.SDK_INT + " error!");
+                    return null;
+                }
+            }
+        } else {
+            // < android 4.0
+            return null;
+        }
+        return connectMethod;
+    }
+
 }
