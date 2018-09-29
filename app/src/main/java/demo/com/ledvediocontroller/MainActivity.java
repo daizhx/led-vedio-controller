@@ -189,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
         tvEmptyDataHint = findViewById(R.id.tv_hint);
         listView = findViewById(android.R.id.list);
         apNameList = new ArrayList<String>();
+        scanResultList = new ArrayList<ScanResult>();
 
 
 
@@ -353,28 +354,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == REQUEST_SCAN  && resultCode == RESULT_OK){
+
+            scanResultList.clear();
+            apNameList.clear();
+
             if(data == null){
+                updateDevList();
                 return;
             }
             List<ScanResult> wifiList = data.getParcelableArrayListExtra("wifi_info");
             if(wifiList == null){
+                updateDevList();
                 return;
             }
-            scanResultList = new ArrayList<ScanResult>();
-            apNameList.clear();
+
             for (ScanResult r : wifiList){
 //                Log.e("MainActivity","--->"+r.SSID);
                 scanResultList.add(r);
                 apNameList.add(r.SSID);
             }
 
-            if(scanResultList.size() > 0){
-                tvEmptyDataHint.setVisibility(View.INVISIBLE);
-            }else{
-                tvEmptyDataHint.setVisibility(View.VISIBLE);
-            }
-
-            ((ArrayAdapter)listView.getAdapter()).notifyDataSetChanged();
+            updateDevList();
             return;
         }
 
@@ -383,6 +383,16 @@ public class MainActivity extends AppCompatActivity {
 //            restoreWifiInfo();不恢复原来的网络了
         }
 
+    }
+
+    private void updateDevList() {
+        if(scanResultList.size() > 0){
+            tvEmptyDataHint.setVisibility(View.INVISIBLE);
+        }else{
+            tvEmptyDataHint.setVisibility(View.VISIBLE);
+        }
+
+        ((ArrayAdapter)listView.getAdapter()).notifyDataSetChanged();
     }
 
     //恢复本来的网络状态

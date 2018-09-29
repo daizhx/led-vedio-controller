@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
@@ -51,6 +52,7 @@ public class SettingActivity extends AppCompatActivity
     ResetDialogFragment resetDialogFragment;
 
 
+    private Socket socket;
     private SocketThread socketThread;
 
     private BlockingQueue<byte[]> blockingQueue;
@@ -135,9 +137,15 @@ public class SettingActivity extends AppCompatActivity
     };
 
 
+    private class SocketWriteThread extends Thread{
+
+
+    }
+
+
     private class SocketThread extends Thread{
         private InetSocketAddress address = new InetSocketAddress(Constants.TCP_SERVER_IP,Constants.TCP_SERVER_PORT);
-        private Socket socket;
+//        private Socket socket;
         private boolean isSocketConnected = false;
         private boolean runningFlag = true;
 
@@ -156,14 +164,10 @@ public class SettingActivity extends AppCompatActivity
                 Log.i("SocketThread","create sockect....");
                 socket = new Socket();
                 try {
-//                    if(socket == null || socket.isClosed()){
-//                        Log.i("SocketThread","create sockect....");
-//                        socket = new Socket();
-//                    }
                     Log.i("SocketThread","sockect connectting....");
                     socket.connect(address,Constants.CONNECT_TIME_OUT);
                     isSocketConnected = true;
-//                    os.close();
+
                 }  catch (IOException e) {
                     e.printStackTrace();
                     try {

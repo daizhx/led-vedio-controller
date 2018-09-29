@@ -60,8 +60,8 @@ public class SearchDeviceActivity extends AppCompatActivity {
         List<ScanResult> lensList = new ArrayList<ScanResult>();
         List<String> apNameList = new ArrayList<>();
         for(ScanResult scanResult : apList){
-            Log.e("SearchDeviceActivity","--->"+scanResult.SSID);
-            if(scanResult.SSID.equals("Processor")){
+//            if(scanResult.SSID.equals("Processor")){
+            if(scanResult.SSID.startsWith("Processor")){
                 lensList.add(scanResult);
                 apNameList.add(scanResult.SSID);
             }
