@@ -139,7 +139,6 @@ public class SettingActivity extends AppCompatActivity
 
     private class SocketWriteThread extends Thread{
 
-
     }
 
 

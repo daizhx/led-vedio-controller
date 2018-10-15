@@ -18,6 +18,7 @@
     <string name="open_location_hint">未打开手机的位置服务，无法扫描！</string>
     <string name="location_request">没有位置服务权限，不能扫描</string>
     <string name="no_device_found">没有扫描到任何设备</string>
+    <string name="config">在线模式</string>
 
     <string-array name="devcie_type">
         <item>DVP168</item>
