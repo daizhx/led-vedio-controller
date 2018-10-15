@@ -215,6 +215,18 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btn_config).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int p = listView.getCheckedItemPosition();
+                if(p < 0){
+                    Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                connectDeviceAP();
+            }
+        });
+
         SharePreferencesUtil spUtil = new SharePreferencesUtil(MainActivity.this);
         String[] ss = spUtil.getSharedPreference(Constants.DEV_AP_RECORD);
         if(ss != null && ss.length > 0){

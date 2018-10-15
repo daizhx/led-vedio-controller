@@ -137,10 +137,6 @@ public class SettingActivity extends AppCompatActivity
     };
 
 
-    private class SocketWriteThread extends Thread{
-
-    }
-
 
     private class SocketThread extends Thread{
         private InetSocketAddress address = new InetSocketAddress(Constants.TCP_SERVER_IP,Constants.TCP_SERVER_PORT);
