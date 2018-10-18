@@ -52,6 +52,10 @@ public class MainActivity extends AppCompatActivity {
 
     private WifiManager mWifiManager;
 
+    private int clickMode;
+    private static final int MODE_ONLINE = 1;
+    private static final int MODE_OFFLINE = 2;
+
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -162,7 +166,14 @@ public class MainActivity extends AppCompatActivity {
         if(progressDialog != null){
             progressDialog.dismiss();
         }
-        startSettingActivity(ssid);
+
+        if(clickMode == MODE_OFFLINE) {
+            startSettingActivity(ssid);
+        }else if(clickMode == MODE_ONLINE){
+            //TODO
+        }else{
+            Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_SHORT).show();
+        }
     }
 
     //切换到设备AP失败
@@ -211,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
+                clickMode = MODE_OFFLINE;
                 connectDeviceAP();
             }
         });
@@ -223,6 +235,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
+                clickMode = MODE_ONLINE;
                 connectDeviceAP();
             }
         });
@@ -241,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
+        clickMode = 0;
         isChangingAP = false;
 
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);

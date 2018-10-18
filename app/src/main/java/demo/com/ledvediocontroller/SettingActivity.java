@@ -54,7 +54,6 @@ public class SettingActivity extends AppCompatActivity
 
     private Socket socket;
     private SocketThread socketThread;
-
     private BlockingQueue<byte[]> blockingQueue;
 
     private MyHandler handler;
@@ -140,7 +139,6 @@ public class SettingActivity extends AppCompatActivity
 
     private class SocketThread extends Thread{
         private InetSocketAddress address = new InetSocketAddress(Constants.TCP_SERVER_IP,Constants.TCP_SERVER_PORT);
-//        private Socket socket;
         private boolean isSocketConnected = false;
         private boolean runningFlag = true;
 
@@ -267,10 +265,9 @@ public class SettingActivity extends AppCompatActivity
         showContentView(signalSourceFragment);
 
 
-        WeakReference<SettingActivity> wr = new WeakReference<SettingActivity>(SettingActivity.this);
-        handler = new MyHandler(wr);
-
-        blockingQueue = new LinkedBlockingDeque<>(1);
+//        WeakReference<SettingActivity> wr = new WeakReference<SettingActivity>(SettingActivity.this);
+//        handler = new MyHandler(wr);
+//        blockingQueue = new LinkedBlockingDeque<>(1);
 
 
 
