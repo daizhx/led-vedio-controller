@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import demo.com.ledvediocontroller.fragments.InputWifiDialogFragment;
 import demo.com.ledvediocontroller.util.SharePreferencesUtil;
 
 public class MainActivity extends AppCompatActivity {
@@ -230,13 +231,16 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_config).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int p = listView.getCheckedItemPosition();
-                if(p < 0){
-                    Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                clickMode = MODE_ONLINE;
-                connectDeviceAP();
+                //TODO TEST
+                InputWifiDialogFragment inputWifiDialogFragment = new InputWifiDialogFragment();
+                inputWifiDialogFragment.show(getSupportFragmentManager(),"input");
+//                int p = listView.getCheckedItemPosition();
+//                if(p < 0){
+//                    Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+//                clickMode = MODE_ONLINE;
+//                connectDeviceAP();
             }
         });
 
