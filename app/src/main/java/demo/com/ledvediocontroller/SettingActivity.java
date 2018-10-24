@@ -53,7 +53,7 @@ public class SettingActivity extends AppCompatActivity
 
 
     private Socket socket;
-    private SocketThread socketThread;
+//    private SocketThread socketThread;
     private BlockingQueue<byte[]> blockingQueue;
 
     private MyHandler handler;
@@ -282,8 +282,8 @@ public class SettingActivity extends AppCompatActivity
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         registerReceiver(wifiReceiver,filter);
 
-        socketThread = new SocketThread();
-        socketThread.start();
+//        socketThread = new SocketThread();
+//        socketThread.start();
     }
 
     @Override
@@ -292,8 +292,8 @@ public class SettingActivity extends AppCompatActivity
         //释放广播接收器
         unregisterReceiver(wifiReceiver);
 
-        socketThread.stopRunning();
-        socketThread.interrupt();
+//        socketThread.stopRunning();
+//        socketThread.interrupt();
     }
 
     @Override
@@ -305,31 +305,33 @@ public class SettingActivity extends AppCompatActivity
 
     //发送命令
     public void sendCommand(byte[] command){
-        blockingQueue.clear();
-
-        if(!socketThread.isConnected()){
-            //无法发送命令
-            Toast.makeText(SettingActivity.this,"未连接到设备，无法控制设备！",Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        try {
-            blockingQueue.put(command);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        SocketManager sm = SocketManager.getInstance();
+        sm.connect();
+//        blockingQueue.clear();
+//
+//        if(!socketThread.isConnected()){
+//            //无法发送命令
+//            Toast.makeText(SettingActivity.this,"未连接到设备，无法控制设备！",Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        try {
+//            blockingQueue.put(command);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
     }
 
     @Override
     public void sendCommand(byte[] command, SendCommandResult result) {
-        if(!socketThread.isConnected()){
-            result.sendCommandFail();
-            return;
-        }else{
-            result.sendCommandSuccess();
-            sendCommand(command);
-        }
+//        if(!socketThread.isConnected()){
+//            result.sendCommandFail();
+//            return;
+//        }else{
+//            result.sendCommandSuccess();
+//            sendCommand(command);
+//        }
 
     }
 

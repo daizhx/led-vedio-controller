@@ -2,19 +2,28 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="@dimen/activity_horizontal_margin">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="WLAN:"
-        android:id="@+id/tv_wlan"/>
+        android:id="@+id/tv_wlan"
+        style="@style/TextAppearance.AppCompat.Title"/>
 
     <android.support.v7.widget.AppCompatSpinner
         app:layout_constraintLeft_toRightOf="@id/tv_wlan"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_width="0dp"
+        android:id="@+id/input_ssid"
         android:layout_height="wrap_content"></android.support.v7.widget.AppCompatSpinner>
+
+    <View android:layout_width="0dp"
+        android:layout_height="2dp"
+        app:layout_constraintTop_toBottomOf="@id/input_ssid"
+        android:background="@color/colorAccent"
+        app:layout_constraintLeft_toLeftOf="@id/input_ssid"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -22,14 +31,16 @@
         app:layout_constraintTop_toBottomOf="@id/tv_wlan"
         android:layout_marginTop="20dp"
         android:text="密码:"
-        android:id="@+id/tv_pwd"/>
+        android:id="@+id/tv_pwd"
+        style="@style/TextAppearance.AppCompat.Title"/>
 
     <android.support.v7.widget.AppCompatEditText
         app:layout_constraintBottom_toBottomOf="@id/tv_pwd"
-
+        app:layout_constraintTop_toTopOf="@id/tv_pwd"
         app:layout_constraintLeft_toRightOf="@id/tv_pwd"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_width="0dp"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:id="@+id/et_input_pwd"/>
 
 </android.support.constraint.ConstraintLayout>

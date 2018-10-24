@@ -136,8 +136,9 @@ public class MainActivity extends AppCompatActivity {
         if(currentWifiInfo != null) {
             String s1 = currentWifiInfo.getSSID();
             String s2 = getSelectedSSID();
-            if (currentWifiInfo.getSSID().equals("\"" + getSelectedSSID() + "\"")) {
-                startSettingActivity(getSelectedSSID());
+            if (s1.equals("\"" + s2 + "\"")) {
+//                startSettingActivity(getSelectedSSID());
+                changeAPSuccess(s2);
                 return;
             }
         }
@@ -160,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.show();
     }
 
-    //成功切换到设备AP
+    //成功切换到设备AP,建立socket连接
     private void changeAPSuccess(String ssid){
         isChangingAP = false;
         isConnectedDeviceAP = true;
@@ -168,13 +169,46 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.dismiss();
         }
 
-        if(clickMode == MODE_OFFLINE) {
-            startSettingActivity(ssid);
-        }else if(clickMode == MODE_ONLINE){
-            //TODO
-        }else{
-            Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_SHORT).show();
-        }
+        Log.d("MainActivity","changeAPSuccess---------------->");
+        //
+        final SocketManager sm = SocketManager.getInstance();
+        sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
+            @Override
+            public void onConnect(boolean b) {
+                Log.d("MainActivity","---------------->"+b);
+                if(b){
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(clickMode == MODE_OFFLINE) {
+                                startSettingActivity("");
+                            }else if(clickMode == MODE_ONLINE){
+                                if(sm.readData()) {
+                                    sm.writeData(Constants.GIVE_IP);
+                                }
+                            }else{
+                                Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
+
+            }
+
+            @Override
+            public void onRead(byte[] data) {
+                Log.d("MainActivity","onRead---------------->"+data);
+                System.out.println("onRead---------------->"+data);
+            }
+
+            @Override
+            public void onWrite(boolean b) {
+                Log.d("MainActivity","onWrite---------------->"+b);
+            }
+        });
+        sm.connect();
+
+
     }
 
     //切换到设备AP失败
@@ -187,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(MainActivity.this,"连接AP失败",Toast.LENGTH_SHORT).show();
     }
 
+    //参数ssid没用了
     private void startSettingActivity(String ssid) {
         Intent intent = new Intent(MainActivity.this,SettingActivity.class);
         intent.putExtra("ssid",ssid);
@@ -232,15 +267,20 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //TODO TEST
-                InputWifiDialogFragment inputWifiDialogFragment = new InputWifiDialogFragment();
-                inputWifiDialogFragment.show(getSupportFragmentManager(),"input");
-//                int p = listView.getCheckedItemPosition();
-//                if(p < 0){
-//                    Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
-//                    return;
-//                }
-//                clickMode = MODE_ONLINE;
-//                connectDeviceAP();
+//                InputWifiDialogFragment inputWifiDialogFragment = new InputWifiDialogFragment();
+//                List<String> data = new ArrayList<>();
+//                data.add("ssid1");
+//                data.add("ssid2");
+//                inputWifiDialogFragment.setSsidList(data);
+//                inputWifiDialogFragment.show(getSupportFragmentManager(),"input");
+
+                int p = listView.getCheckedItemPosition();
+                if(p < 0){
+                    Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                clickMode = MODE_ONLINE;
+                connectDeviceAP();
             }
         });
 

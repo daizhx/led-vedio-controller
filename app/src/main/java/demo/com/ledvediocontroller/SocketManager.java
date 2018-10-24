@@ -24,8 +24,11 @@ public class SocketManager{
     public final static int DISCONNECTED  = 0;
     public final static int CONNECTED  = 1;
 
+    private SocketOperatorListener socketOperatorListener;
+
     public interface SocketOperatorListener {
-        boolean onRead(byte[] data);
+        void onConnect(boolean b);
+        void onRead(byte[] data);
         void onWrite(boolean b);
     }
 
@@ -47,7 +50,9 @@ public class SocketManager{
     //建立连接
     public void connect(){
         if(socket != null && socket.isConnected()){
-            return;
+            if(socketOperatorListener != null){
+                socketOperatorListener.onConnect(true);
+            }
         }
 
         ThreadPoolProxy tpp = ThreadPoolProxy.getInstance();
@@ -59,9 +64,18 @@ public class SocketManager{
                 try {
                     socket.connect(address,Constants.CONNECT_TIME_OUT);
                     status = CONNECTED;
+
+                    if(socketOperatorListener != null){
+                        socketOperatorListener.onConnect(true);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                     status = DISCONNECTED;
+
+                    if(socketOperatorListener != null){
+                        socketOperatorListener.onConnect(false);
+                    }
+                    return;
                 }
 
                 try {
@@ -83,7 +97,7 @@ public class SocketManager{
     }
 
     //从socket读取数据
-    public boolean readData(final SocketOperatorListener handler){
+    public boolean readData(){
         ThreadPoolProxy tpp = ThreadPoolProxy.getInstance();
 
         if(inputStream == null || socket == null || socket.isInputShutdown()){
@@ -97,22 +111,26 @@ public class SocketManager{
                 try {
                     if(inputStream != null) {
                         while (inputStream.read(data, 0, data.length) != 0) {
-                            handler.onRead(data);
+                            if(socketOperatorListener != null) {
+                                socketOperatorListener.onRead(data);
+                            }
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    handler.onRead(null);
+                    if(socketOperatorListener != null) {
+                        socketOperatorListener.onRead(null);
+                    }
                 }
 
-                Log.d("test","readData done");
+                Log.d("SocketManager","readData done");
             }
         });
         return true;
     }
 
     //写数据到socket中
-    public boolean writeData(final byte[] data, final SocketOperatorListener handler){
+    public boolean writeData(final byte[] data){
         ThreadPoolProxy tpp = ThreadPoolProxy.getInstance();
         if(outputStream == null || socket == null || socket.isOutputShutdown()){
             return false;
@@ -123,10 +141,14 @@ public class SocketManager{
                 if(outputStream != null){
                     try {
                         outputStream.write(data);
-                        handler.onWrite(true);
+                        if(socketOperatorListener != null) {
+                            socketOperatorListener.onWrite(true);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        handler.onWrite(false);
+                        if(socketOperatorListener != null) {
+                            socketOperatorListener.onWrite(false);
+                        }
                     }
                 }
             }
@@ -134,5 +156,18 @@ public class SocketManager{
         return true;
     }
 
+    public void setSocketOperatorListener(SocketOperatorListener socketOperatorListener) {
+        this.socketOperatorListener = socketOperatorListener;
+    }
 
+    //关闭连接，释放资源
+    public void disconnect(){
+        try {
+            inputStream.close();
+            outputStream.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
