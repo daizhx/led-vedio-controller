@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import demo.com.ledvediocontroller.fragments.InputWifiDialogFragment;
+import demo.com.ledvediocontroller.util.BytesHexStrTranslate;
 import demo.com.ledvediocontroller.util.SharePreferencesUtil;
 
 public class MainActivity extends AppCompatActivity {
@@ -169,13 +170,13 @@ public class MainActivity extends AppCompatActivity {
             progressDialog.dismiss();
         }
 
-        Log.d("MainActivity","changeAPSuccess---------------->");
+        Log.i("MainActivity","changeAPSuccess---------------->");
         //
         final SocketManager sm = SocketManager.getInstance();
         sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
             @Override
             public void onConnect(boolean b) {
-                Log.d("MainActivity","---------------->"+b);
+                Log.i("MainActivity","onConnect---------------->"+b);
                 if(b){
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
@@ -185,9 +186,11 @@ public class MainActivity extends AppCompatActivity {
                             }else if(clickMode == MODE_ONLINE){
                                 if(sm.readData()) {
                                     sm.writeData(Constants.GIVE_IP);
+                                }else{
+                                    Toast.makeText(MainActivity.this,"无法读取服务端返回的数据",Toast.LENGTH_SHORT).show();
                                 }
                             }else{
-                                Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -197,15 +200,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onRead(byte[] data) {
-                Log.d("MainActivity","onRead---------------->"+data);
-                System.out.println("onRead---------------->"+data);
+                Log.i("MainActivity","onRead---------------->"+BytesHexStrTranslate.bytesToHexFun2(data));
+
+
             }
 
             @Override
-            public void onWrite(boolean b) {
-                Log.d("MainActivity","onWrite---------------->"+b);
+            public void onWrite(String data,boolean b) {
+                Log.i("MainActivity","onWrite---------------->"+data + "," +b);
             }
         });
+
         sm.connect();
 
 

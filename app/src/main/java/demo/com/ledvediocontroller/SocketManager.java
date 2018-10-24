@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import demo.com.ledvediocontroller.util.BytesHexStrTranslate;
 import demo.com.ledvediocontroller.util.ThreadPoolProxy;
 
 public class SocketManager{
@@ -29,7 +30,7 @@ public class SocketManager{
     public interface SocketOperatorListener {
         void onConnect(boolean b);
         void onRead(byte[] data);
-        void onWrite(boolean b);
+        void onWrite(String hexString,boolean b);
     }
 
     public static SocketManager getInstance(){
@@ -52,6 +53,7 @@ public class SocketManager{
         if(socket != null && socket.isConnected()){
             if(socketOperatorListener != null){
                 socketOperatorListener.onConnect(true);
+                return;
             }
         }
 
@@ -64,7 +66,6 @@ public class SocketManager{
                 try {
                     socket.connect(address,Constants.CONNECT_TIME_OUT);
                     status = CONNECTED;
-
                     if(socketOperatorListener != null){
                         socketOperatorListener.onConnect(true);
                     }
@@ -110,6 +111,7 @@ public class SocketManager{
                 byte[] data = new byte[10];
                 try {
                     if(inputStream != null) {
+                        Log.i("SocketManager","readData......");
                         while (inputStream.read(data, 0, data.length) != 0) {
                             if(socketOperatorListener != null) {
                                 socketOperatorListener.onRead(data);
@@ -123,7 +125,7 @@ public class SocketManager{
                     }
                 }
 
-                Log.d("SocketManager","readData done");
+                Log.i("SocketManager","readData done");
             }
         });
         return true;
@@ -142,12 +144,12 @@ public class SocketManager{
                     try {
                         outputStream.write(data);
                         if(socketOperatorListener != null) {
-                            socketOperatorListener.onWrite(true);
+                            socketOperatorListener.onWrite(BytesHexStrTranslate.bytesToHexFun2(data),true);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                         if(socketOperatorListener != null) {
-                            socketOperatorListener.onWrite(false);
+                            socketOperatorListener.onWrite(BytesHexStrTranslate.bytesToHexFun2(data),false);
                         }
                     }
                 }
