@@ -164,14 +164,17 @@ public class MainActivity extends AppCompatActivity {
 
     //成功切换到设备AP,建立socket连接
     private void changeAPSuccess(String ssid){
+        if(isChangingAP == false){
+            return;
+        }
+        Log.i("MainActivity","changeAPSuccess---------------->");
         isChangingAP = false;
         isConnectedDeviceAP = true;
         if(progressDialog != null){
             progressDialog.dismiss();
         }
 
-        Log.i("MainActivity","changeAPSuccess---------------->");
-        //
+        //建立socket连接
         final SocketManager sm = SocketManager.getInstance();
         sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
             @Override
