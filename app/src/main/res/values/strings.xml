@@ -19,6 +19,7 @@
     <string name="location_request">没有位置服务权限，不能扫描</string>
     <string name="no_device_found">没有扫描到任何设备</string>
     <string name="config">在线模式</string>
+    <string name="config_ip_title">设置连接路由器信息</string>
 
     <string-array name="devcie_type">
         <item>DVP168</item>

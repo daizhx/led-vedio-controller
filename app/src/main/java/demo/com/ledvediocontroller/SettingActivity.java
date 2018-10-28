@@ -36,6 +36,7 @@ import demo.com.ledvediocontroller.fragments.SetLightDialogFragment;
 import demo.com.ledvediocontroller.fragments.SettingFragment;
 import demo.com.ledvediocontroller.fragments.SignalSourceFragment;
 import demo.com.ledvediocontroller.util.BottomNavigationViewHelper;
+import demo.com.ledvediocontroller.util.BytesHexStrTranslate;
 
 public class SettingActivity extends AppCompatActivity
         implements SettingFragment.OnFragmentInteractionListener,
@@ -306,7 +307,7 @@ public class SettingActivity extends AppCompatActivity
     //发送命令
     public void sendCommand(byte[] command){
         SocketManager sm = SocketManager.getInstance();
-        sm.connect();
+        sm.writeData(command);
 //        blockingQueue.clear();
 //
 //        if(!socketThread.isConnected()){
@@ -324,7 +325,31 @@ public class SettingActivity extends AppCompatActivity
     }
 
     @Override
-    public void sendCommand(byte[] command, SendCommandResult result) {
+    public void sendCommand(final byte[] command, final SendCommandResult result) {
+        SocketManager sm = SocketManager.getInstance();
+        sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
+            @Override
+            public void onConnect(boolean b) {
+
+            }
+
+            @Override
+            public void onRead(String data) {
+
+            }
+
+            @Override
+            public void onWrite(String hexString, boolean b) {
+                if(BytesHexStrTranslate.bytesToHexFun2(command).equals(hexString)){
+                    if(b){
+                        result.sendCommandSuccess();
+                    }else {
+                        result.sendCommandFail();
+                    }
+                }
+            }
+        });
+        sm.writeData(command);
 //        if(!socketThread.isConnected()){
 //            result.sendCommandFail();
 //            return;

@@ -38,6 +38,10 @@
             android:theme="@style/AppTheme.ActionBar" />
         <activity android:name=".SetDateTimeActivity"
             android:theme="@style/AppTheme.ActionBar"></activity>
+
+        <activity android:name=".fragments.InputWifiDialogFragment"
+            android:theme="@style/Theme.AppCompat.Light.Dialog"
+            android:label="@string/config_ip_title"/>
     </application>
 
 </manifest>

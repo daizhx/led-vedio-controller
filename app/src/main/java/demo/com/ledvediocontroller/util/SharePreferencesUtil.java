@@ -14,7 +14,7 @@ public class SharePreferencesUtil {
         mContext = c;
     }
 
-    public String[] getSharedPreference(String key) {
+    public String[] getStringArray(String key) {
         String regularEx = "#";
         String[] str = null;
         SharedPreferences sp = mContext.getSharedPreferences(fileName, Context.MODE_PRIVATE);
@@ -26,7 +26,8 @@ public class SharePreferencesUtil {
         return str;
     }
 
-    public void setSharedPreference(String key, String[] values) {
+
+    public void setStringArray(String key, String[] values) {
         String regularEx = "#";
         String str = "";
         SharedPreferences sp = mContext.getSharedPreferences(fileName, Context.MODE_PRIVATE);
@@ -41,7 +42,7 @@ public class SharePreferencesUtil {
         }
     }
 
-    public void setSharedPreference(String key, List<String> values) {
+    public void setStringArray(String key, List<String> values) {
         String regularEx = "#";
         String str = "";
         SharedPreferences sp = mContext.getSharedPreferences(fileName, Context.MODE_PRIVATE);
@@ -56,9 +57,20 @@ public class SharePreferencesUtil {
         }
     }
 
+    public void setString(String key,String v){
+        SharedPreferences sp = mContext.getSharedPreferences(fileName, Context.MODE_PRIVATE);
+        sp.edit().putString(key,v).commit();
+    }
+
+    public String getString(String key){
+        SharedPreferences sp = mContext.getSharedPreferences(fileName, Context.MODE_PRIVATE);
+        return sp.getString(key,null);
+    }
+
     public void delete(String key){
         SharedPreferences sp = mContext.getSharedPreferences(fileName, Context.MODE_PRIVATE);
         sp.edit().remove(key).commit();
     }
+
 
 }

@@ -1,10 +1,8 @@
 package demo.com.ledvediocontroller;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -19,7 +17,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -69,7 +66,7 @@ public class SearchDeviceActivity extends AppCompatActivity {
 
         if(lensList.size() > 0) {
             SharePreferencesUtil util = new SharePreferencesUtil(SearchDeviceActivity.this);
-            util.setSharedPreference(Constants.DEV_AP_RECORD,apNameList);
+            util.setStringArray(Constants.DEV_AP_RECORD,apNameList);
 
             Intent intent = new Intent();
             intent.putParcelableArrayListExtra("wifi_info", (ArrayList<? extends Parcelable>) lensList);

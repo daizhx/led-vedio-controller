@@ -1,5 +1,7 @@
 package demo.com.ledvediocontroller;
 
+import demo.com.ledvediocontroller.util.BytesHexStrTranslate;
+
 public class Constants {
     public static final String DEV_AP_RECORD = "DEV_AP_RECORD";
 
@@ -81,6 +83,48 @@ public class Constants {
         c[6] = 0x00;
         c[7] = (byte) (256 - (0x08 + 0xAB + 0x08 + 0x00 + v + 0x00 + 0x00)%256);
         return c;
+    }
+
+    public static final byte[] getSSIDConfigBytes(String ssid){
+        byte[] ss = BytesHexStrTranslate.toBytes(ssid);
+        int l = 4 + ss.length;
+        byte[] ret = new byte[l];
+        ret[0] = (byte) l;
+        ret[1] = (byte) 0xAB;
+        ret[2] = 0x20;
+        for(int i=0;i<ss.length;i++){
+            ret[3+i] = ss[i];
+        }
+        //计算校验和
+        int sum = 0;
+        for(int i=0;i<(ret.length - 1);i++){
+            sum += ret[i];
+        }
+        byte check = (byte) (256 - sum%256);
+        ret[l-1] = check;
+
+        return ret;
+    }
+
+    public static final byte[] getSSIDPWDConfigBytes(String pwd){
+        byte[] ss = BytesHexStrTranslate.toBytes(pwd);
+        int l = 4 + ss.length;
+        byte[] ret = new byte[l];
+        ret[0] = (byte) l;
+        ret[1] = (byte) 0xAB;
+        ret[2] = 0x21;
+        for(int i=0;i<ss.length;i++){
+            ret[3+i] = ss[i];
+        }
+        //计算校验和
+        int sum = 0;
+        for(int i=0;i<(ret.length - 1);i++){
+            sum += ret[i];
+        }
+        byte check = (byte) (256 - sum%256);
+        ret[l-1] = check;
+
+        return ret;
     }
 
 }

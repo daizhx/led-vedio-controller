@@ -1,11 +1,11 @@
 package demo.com.ledvediocontroller;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
@@ -18,17 +18,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import demo.com.ledvediocontroller.fragments.InputWifiDialogFragment;
-import demo.com.ledvediocontroller.util.BytesHexStrTranslate;
 import demo.com.ledvediocontroller.util.SharePreferencesUtil;
 
 public class MainActivity extends AppCompatActivity {
@@ -36,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_SCAN = 1;
     private static final int REQUEST_SETTING = 2;
+
+    private static final int REQUEST_CONFIG_IP = 3;
+
 
     ListView listView;
     List<ScanResult> scanResultList;
@@ -199,9 +199,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onRead(byte[] data) {
-                Log.i("MainActivity","onRead---------------->"+BytesHexStrTranslate.bytesToHexFun2(data));
+            public void onRead(final String data) {
+                Log.i("MainActivity","onRead---------------->"+data);
+                if("0.0.0.0".equals(data)){
+                    Intent intent = new Intent(MainActivity.this,InputWifiDialogFragment.class);
+                    startActivityForResult(intent,REQUEST_CONFIG_IP);
 
+                }else{
+                    //TODO 恢复到路由器连接
+                    restoreWifiAndConnect(data);
+                }
 
             }
 
@@ -211,10 +218,35 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        sm.connect();
+        sm.connect(Constants.TCP_SERVER_IP);
 
 
     }
+
+    //直连或者通过局域网与设备建立socket通信
+    private void connectDevSocket(String ip) {
+        SocketManager sm = SocketManager.getInstance();
+        sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
+            @Override
+            public void onConnect(boolean b) {
+                if(b){
+                    startSettingActivity("");
+                }
+            }
+
+            @Override
+            public void onRead(String data) {
+
+            }
+
+            @Override
+            public void onWrite(String hexString, boolean b) {
+
+            }
+        });
+        sm.connect(ip);
+    }
+
 
     //切换到设备AP失败
     private void changeAPFail(){
@@ -271,14 +303,6 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_config).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO TEST
-//                InputWifiDialogFragment inputWifiDialogFragment = new InputWifiDialogFragment();
-//                List<String> data = new ArrayList<>();
-//                data.add("ssid1");
-//                data.add("ssid2");
-//                inputWifiDialogFragment.setSsidList(data);
-//                inputWifiDialogFragment.show(getSupportFragmentManager(),"input");
-
                 int p = listView.getCheckedItemPosition();
                 if(p < 0){
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
@@ -290,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         SharePreferencesUtil spUtil = new SharePreferencesUtil(MainActivity.this);
-        String[] ss = spUtil.getSharedPreference(Constants.DEV_AP_RECORD);
+        String[] ss = spUtil.getStringArray(Constants.DEV_AP_RECORD);
         if(ss != null && ss.length > 0){
             for(String ap : ss){
                 apNameList.add(ap);
@@ -458,6 +482,18 @@ public class MainActivity extends AppCompatActivity {
 //            restoreWifiInfo();不恢复原来的网络了
         }
 
+        if(requestCode == REQUEST_CONFIG_IP && resultCode == RESULT_OK){
+            String devIp = data.getStringExtra("ip");
+            //TODO 恢复到路由器连接
+            restoreWifiAndConnect(devIp);
+            return;
+        }
+
+    }
+
+    private void restoreWifiAndConnect(String ip) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setMessage("读取设备IP地址成功，请切换到路由器后在再重新操作");
     }
 
     private void updateDevList() {
@@ -471,18 +507,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //恢复本来的网络状态
-    public void restoreWifiInfo() {
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        wifiManager.disconnect();
-        int networkId = currentNetWorkId;
-        if (networkId >= 0) {
-            wifiManager.enableNetwork(networkId, true);
-        } else {
-            // 3G
+//    public void restoreWifiInfo() {
+//        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+//        wifiManager.disconnect();
+//        int networkId = currentNetWorkId;
+//        if (networkId >= 0) {
+//            wifiManager.enableNetwork(networkId, true);
+//        } else {
+//            // 3G
 //            wifiManager.setWifiEnabled(false);
-        }
-
-    }
+//        }
+//
+//    }
 
     private WifiConfiguration isExist(String ssid) {
         List<WifiConfiguration> configs = mWifiManager.getConfiguredNetworks();
