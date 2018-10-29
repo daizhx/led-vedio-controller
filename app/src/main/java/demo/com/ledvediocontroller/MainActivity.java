@@ -43,13 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
     TextView tvEmptyDataHint;
 
-    //保存手机当前的网络ID
-    private int currentNetWorkId = -1;
-    //是否连接到设备AP
-    private boolean isConnectedDeviceAP;
-    //是否正在尝试changeAP
-    private boolean isChangingAP;
-
     private ProgressDialog progressDialog;
 
     private WifiManager mWifiManager;
@@ -57,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private int clickMode;
     private static final int MODE_ONLINE = 1;
     private static final int MODE_OFFLINE = 2;
+
 
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override
@@ -68,49 +62,19 @@ public class MainActivity extends AppCompatActivity {
                     NetworkInfo info = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
                     if(info.getState().equals(NetworkInfo.State.DISCONNECTED)){
                         Log.i("MainActivity","wifi网络连接断开！");
-                        currentNetWorkId = -1;
                     }else if(info.getState().equals(NetworkInfo.State.CONNECTED)){
-                        WifiManager wifiManager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
-                        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                        currentNetWorkId = wifiInfo.getNetworkId();
-                        Log.i("MainActivity","连接到wifi网络--->"+wifiInfo.getSSID());
-//                        int p = listView.getSelectedItemPosition();
-                        //是否连接到目标AP
-                        int p = listView.getCheckedItemPosition();
-                        if(p >= 0){
-                            String ssid = apNameList.get(p);
-                            String currentSSID = wifiInfo.getSSID();
-                            if(currentSSID.equals("\"" + ssid + "\"")){
-                                //连接到设备AP,会广播2次，所以通过变量isConnectedDeviceAP控制，处理一次
-                                if(!isConnectedDeviceAP && isChangingAP){
-                                    changeAPSuccess(ssid);
-                                }
-                            }else{
-                                if(isChangingAP) {
-                                    changeAPFail();
-                                }
-                            }
-                        }
+                        wifiConnected();
                     }else if(info.getState().equals(NetworkInfo.State.SUSPENDED)){
                         //其他状态
                         Log.i("MainActivity","wifi网络SUSPENDED！");
-                        currentNetWorkId = -1;
-                        if(isChangingAP) {
-                            changeAPFail();
-                        }
                     }else if(info.getState().equals(NetworkInfo.State.UNKNOWN)){
                         Log.i("MainActivity","wifi网络UNKNOWN！");
-                        currentNetWorkId = -1;
-                        if(isChangingAP) {
-                            changeAPFail();
-                        }
                     }else if(info.getState().equals(NetworkInfo.State.CONNECTING)){
                         Log.i("MainActivity","CONNECTING wifi网络："+info.getExtraInfo());
                     }else if(info.getState().equals(NetworkInfo.State.DISCONNECTING)){
                         Log.i("MainActivity","DISCONNECTING wifi网络："+info.getExtraInfo());
                     }else{
                         Log.e("MainActivity","未知wifi网络状态-->"+info.getState());
-                        currentNetWorkId = -1;
                     }
                 }
                 return;
@@ -119,9 +83,6 @@ public class MainActivity extends AppCompatActivity {
                     //wifi状态变化
                     int status = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE,-1);
                     Log.i("MainActivity","wifi status:"+status);
-                    if(status == WifiManager.WIFI_STATE_ENABLED && isChangingAP){
-                        connectDeviceAP();
-                    }
 
                 }
                 return;
@@ -129,48 +90,81 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    //尝试连接连接设备AP
+    //wifi 热点已连接,可能会调用多次
+    private void wifiConnected() {
+        WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        String devSSID = getSelectedSSID();
+        //是否连接到目标AP
+        String currentSSID = wifiInfo.getSSID();
+        if(currentSSID.equals("\"" + devSSID + "\"")){
+            //连接到设备AP,会广播2次，所以通过变量isConnectedDeviceAP控制，处理一次
+            if(progressDialog.isShowing()){
+                closeProgress();
+                //TODO 连接设备
+
+            }
+
+        }
+    }
+
+    private boolean checkWifi(){
+        if(!mWifiManager.isWifiEnabled()){
+            //WIFI未打开
+            Toast.makeText(MainActivity.this,"请开启WIFI",Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    //尝试连接设备AP
     private void connectDeviceAP() {
         //如果已经连接直接进入
         WifiManager mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
-        if(currentWifiInfo != null) {
-            String s1 = currentWifiInfo.getSSID();
-            String s2 = getSelectedSSID();
-            if (s1.equals("\"" + s2 + "\"")) {
-//                startSettingActivity(getSelectedSSID());
-                changeAPSuccess(s2);
-                return;
-            }
+        String s1 = currentWifiInfo.getSSID();
+        String devSSID = getSelectedSSID();
+        if (s1.equals("\"" + devSSID + "\"")) {
+            //TODO 建立socket通信
+
+            return;
         }
 
-        if(!changeAP()){
-            changeAPFail();
-        }else{
-            showChangeAPProgress();
+
+        WifiConfiguration wificonf = createWifiConfig(devSSID,"3.14159265",WIFICIPHER_WPA);
+        int networkId = mWifiManager.addNetwork(wificonf);
+
+        int currentNetWorkId = currentWifiInfo.getNetworkId();
+        if(currentNetWorkId != -1) {
+            mWifiManager.disableNetwork(currentNetWorkId);
+        }
+
+        if(mWifiManager.enableNetwork(networkId, true)){
+            showProgress();
+        }else {
+            Toast.makeText(MainActivity.this,"无法连接设备热点",Toast.LENGTH_SHORT).show();
         }
     }
 
     //显示正在切换到的设备AP的进度条
-    private void showChangeAPProgress() {
+    private void showProgress() {
 
         if(progressDialog == null) {
             progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("正在连接设备");
+            progressDialog.setMessage("正在连接设备,请稍后。。。");
             progressDialog.setCanceledOnTouchOutside(false);
         }
         progressDialog.show();
     }
 
-    //成功切换到设备AP,建立socket连接
-    private void changeAPSuccess(String ssid){
-        isChangingAP = false;
-        isConnectedDeviceAP = true;
+    private void closeProgress(){
         if(progressDialog != null){
             progressDialog.dismiss();
         }
+    }
 
-        Log.i("MainActivity","changeAPSuccess---------------->");
+    //建立socket连接
+    private void connectDev(){
         //
         final SocketManager sm = SocketManager.getInstance();
         sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
@@ -247,17 +241,6 @@ public class MainActivity extends AppCompatActivity {
         sm.connect(ip);
     }
 
-
-    //切换到设备AP失败
-    private void changeAPFail(){
-        isChangingAP = false;
-        isConnectedDeviceAP = false;
-        if(progressDialog != null){
-            progressDialog.dismiss();
-        }
-        Toast.makeText(MainActivity.this,"连接AP失败",Toast.LENGTH_SHORT).show();
-    }
-
     //参数ssid没用了
     private void startSettingActivity(String ssid) {
         Intent intent = new Intent(MainActivity.this,SettingActivity.class);
@@ -290,8 +273,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //chanage access point
-                int p = listView.getCheckedItemPosition();
-                if(p < 0){
+                if(getSelectedSSID() == null){
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -303,8 +285,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_config).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int p = listView.getCheckedItemPosition();
-                if(p < 0){
+                if(getSelectedSSID() == null){
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -328,18 +309,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void initData() {
         clickMode = 0;
-        isChangingAP = false;
 
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
-        currentNetWorkId = currentWifiInfo.getNetworkId();
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        isConnectedDeviceAP = false;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
@@ -351,7 +329,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         unregisterReceiver(wifiReceiver);
-        isChangingAP = false;
     }
 
     @Override
@@ -366,87 +343,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return apNameList.get(p);
     }
-
-    //尝试切换到设备AP
-    //返回值只代表操作是否成功，不代表业务是否成功
-    private boolean changeAP() {
-        isChangingAP = true;
-        WifiManager mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        if(!mWifiManager.isWifiEnabled()){
-            //WIFI未打开
-            mWifiManager.setWifiEnabled(true);
-            return false;
-        }
-
-        WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
-        //连接到指定AP
-        int p = listView.getCheckedItemPosition();
-//        int p = listView.getSelectedItemPosition();
-        if(p < 0){
-            return false;
-        }
-        String ssid = apNameList.get(p);
-
-//        List<WifiConfiguration> list = mWifiManager.getConfiguredNetworks();
-//        if(list == null){
-//            list = new ArrayList<>();
-//        }
-
-        //是否保存过AP
-//        for (WifiConfiguration wifiConfiguration : list) {
-//            Log.e("MainActivity", "ssid:" + wifiConfiguration.SSID);
-//            if (wifiConfiguration.SSID != null && wifiConfiguration.SSID.equals("\"" + ssid + "\"")) {
-////                WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
-//                currentNetWorkId = currentWifiInfo.getNetworkId();
-////                boolean b = mWifiManager.disconnect();
-////                if(!b){
-////                    Toast.makeText(MainActivity.this,"断开WIFI操作失败",Toast.LENGTH_SHORT).show();
-////                    return;
-////                }
-//                if(currentNetWorkId != -1) {
-//                    mWifiManager.disableNetwork(currentNetWorkId);
-//                }
-//                boolean b = mWifiManager.enableNetwork(wifiConfiguration.networkId,true);
-//                if(!b){
-//                    Toast.makeText(MainActivity.this,"切换AP操作失败",Toast.LENGTH_SHORT).show();
-//                    return false;
-//                }
-////                b = mWifiManager.reconnect();
-////                if(!b){
-////                    Toast.makeText(MainActivity.this,"连接WIFI操作失败",Toast.LENGTH_SHORT).show();
-////                    return;
-////                }
-//                return true;
-//            }
-//        }
-
-        WifiConfiguration wificonf = createWifiConfig(ssid,"3.14159265",WIFICIPHER_WPA);
-        int networkId = mWifiManager.addNetwork(wificonf);
-
-        currentNetWorkId = currentWifiInfo.getNetworkId();
-
-//        if(!mWifiManager.disconnect()){
-//            Toast.makeText(MainActivity.this,"断开WIFI操作失败",Toast.LENGTH_SHORT).show();
-//            return false;
-//        }
-
-        if(currentNetWorkId != -1) {
-            mWifiManager.disableNetwork(currentNetWorkId);
-        }
-
-        if(!mWifiManager.enableNetwork(networkId, true)){
-            Toast.makeText(MainActivity.this,"无法连接wifi网络"+networkId,Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-//        if(!mWifiManager.reconnect()){
-//            Toast.makeText(MainActivity.this,"连接WIFI操作失败",Toast.LENGTH_SHORT).show();
-//            return false;
-//        }
-
-        return true;
-    }
-
 
 
     @Override
