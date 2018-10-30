@@ -1,5 +1,6 @@
 package demo.com.ledvediocontroller;
 
+import android.os.Handler;
 import android.util.Log;
 
 import java.io.IOException;
@@ -29,10 +30,17 @@ public class SocketManager{
 
     private SocketOperatorListener socketOperatorListener;
 
+    //在主线程UI线程上执行回调函数
+    private Handler handler;
+
+    public void setHandler(Handler handler) {
+        this.handler = handler;
+    }
+
     public interface SocketOperatorListener {
-        void onConnect(boolean b);
-        void onRead(String data);
-        void onWrite(String hexString,boolean b);
+        void onSocketConnect(String ip,boolean b);
+        void onSocketRead(String data);
+        void onSocketWrite(String hexString,boolean b);
     }
 
     public static SocketManager getInstance(){
@@ -50,11 +58,29 @@ public class SocketManager{
 
     }
 
+    //判断sockect是否连接服务器，不能通过socket.isConnected来判断
+    public boolean isConnected(){
+        try {
+            if(socket != null) {
+                socket.sendUrgentData(0xff);
+            }
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     //建立连接
-    public void connect(String ip){
-        if(ip.equals(this.ip) && socket != null && socket.isConnected()){
-            if(socketOperatorListener != null){
-                socketOperatorListener.onConnect(true);
+    public void connect(final String ip){
+        if(ip.equals(this.ip) && isConnected()){
+            if(socketOperatorListener != null && handler != null){
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        socketOperatorListener.onSocketConnect(ip,true);
+                    }
+                });
                 return;
             }
         }
@@ -64,33 +90,40 @@ public class SocketManager{
         close();
 
 
-
         ThreadPoolProxy tpp = ThreadPoolProxy.getInstance();
         tpp.execute(new Runnable() {
             @Override
             public void run() {
+                //根据IP创建sokcet连接
                 synchronized (SocketManager.this){
-                    if(socket != null && socket.isConnected()){
-                        if(socketOperatorListener != null){
-                            socketOperatorListener.onConnect(true);
-                            return;
-                        }
+                    if(socket != null){
+                        return;
                     }
-
                     socket = new Socket();
                     //创建连接
                     try {
                         socket.connect(address,Constants.CONNECT_TIME_OUT);
                         status = CONNECTED;
-                        if(socketOperatorListener != null){
-                            socketOperatorListener.onConnect(true);
+                        if(socketOperatorListener != null && handler != null){
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    socketOperatorListener.onSocketConnect(ip,true);
+                                }
+                            });
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
                         status = DISCONNECTED;
 
-                        if(socketOperatorListener != null){
-                            socketOperatorListener.onConnect(false);
+                        if(socketOperatorListener != null && handler != null){
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    socketOperatorListener.onSocketConnect(ip,false);
+                                }
+                            });
+
                         }
                         return;
                     }
@@ -116,11 +149,11 @@ public class SocketManager{
     }
 
     //从socket读取数据
-    public boolean readData(){
+    public void readData(){
         ThreadPoolProxy tpp = ThreadPoolProxy.getInstance();
 
         if(inputStream == null || socket == null || socket.isInputShutdown()){
-            return false;
+            return;
         }
 
         tpp.execute(new Runnable() {
@@ -131,22 +164,33 @@ public class SocketManager{
                     if(inputStream != null) {
                         Log.i("SocketManager","readData......");
                         int l = inputStream.read(data, 0, data.length);
-                        String str = new String(data,0,l);
-                        if(socketOperatorListener != null) {
-                            socketOperatorListener.onRead(str);
+                        final String str = new String(data,0,l);
+                        if(socketOperatorListener != null && handler != null) {
+                            handler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    socketOperatorListener.onSocketRead(str);
+                                }
+                            });
+
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    if(socketOperatorListener != null) {
-                        socketOperatorListener.onRead(null);
+                    if(socketOperatorListener != null  && handler != null) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                socketOperatorListener.onSocketRead(null);
+                            }
+                        });
+
                     }
                 }
 
                 Log.i("SocketManager","readData done");
             }
         });
-        return true;
     }
 
     //写数据到socket中
@@ -161,14 +205,14 @@ public class SocketManager{
                 if(outputStream != null){
                     try {
                         outputStream.write(data);
-                        if(socketOperatorListener != null) {
-                            socketOperatorListener.onWrite(BytesHexStrTranslate.bytesToHexFun2(data),true);
-                        }
+//                        if(socketOperatorListener != null) {
+//                            socketOperatorListener.onWrite(BytesHexStrTranslate.bytesToHexFun2(data),true);
+//                        }
                     } catch (IOException e) {
                         e.printStackTrace();
-                        if(socketOperatorListener != null) {
-                            socketOperatorListener.onWrite(BytesHexStrTranslate.bytesToHexFun2(data),false);
-                        }
+//                        if(socketOperatorListener != null) {
+//                            socketOperatorListener.onWrite(BytesHexStrTranslate.bytesToHexFun2(data),false);
+//                        }
                     }
                 }
             }
@@ -199,6 +243,7 @@ public class SocketManager{
         }finally {
             inputStream = null;
             outputStream = null;
+            socket = null;
         }
     }
 }

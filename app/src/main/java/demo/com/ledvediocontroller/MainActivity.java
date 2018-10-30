@@ -1,6 +1,5 @@
 package demo.com.ledvediocontroller;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +11,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,7 +28,7 @@ import java.util.List;
 import demo.com.ledvediocontroller.fragments.InputWifiDialogFragment;
 import demo.com.ledvediocontroller.util.SharePreferencesUtil;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SocketManager.SocketOperatorListener{
     private static final String TAG = "MainActivity";
 
     private static final int REQUEST_SCAN = 1;
@@ -47,10 +47,16 @@ public class MainActivity extends AppCompatActivity {
 
     private WifiManager mWifiManager;
 
-    private int clickMode;
+    //连接模式
+    private int connectMode;
     private static final int MODE_ONLINE = 1;
     private static final int MODE_OFFLINE = 2;
 
+    //初始状态的wifi网络 -1没有wifi网络连接
+    private int initWifiNetWorkID = -1;
+
+    //用来临时保存询问回来的的设备IP地址
+    private String resultIP;
 
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override
@@ -94,17 +100,22 @@ public class MainActivity extends AppCompatActivity {
     private void wifiConnected() {
         WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int networkID = wifiInfo.getNetworkId();
+        String ssid = wifiInfo.getSSID();
+
         String devSSID = getSelectedSSID();
         //是否连接到目标AP
-        String currentSSID = wifiInfo.getSSID();
-        if(currentSSID.equals("\"" + devSSID + "\"")){
+        if(ssid.equals("\"" + devSSID + "\"")){
             //连接到设备AP,会广播2次，所以通过变量isConnectedDeviceAP控制，处理一次
             if(progressDialog.isShowing()){
-                closeProgress();
-                //TODO 连接设备
-
+                connectDevSocket(Constants.TCP_SERVER_IP);
             }
 
+        }
+
+        if(networkID == initWifiNetWorkID){
+            //恢复路由器网络
+            connectDevSocket(resultIP);
         }
     }
 
@@ -119,17 +130,16 @@ public class MainActivity extends AppCompatActivity {
 
     //尝试连接设备AP
     private void connectDeviceAP() {
+        showProgress();
         //如果已经连接直接进入
         WifiManager mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
         String s1 = currentWifiInfo.getSSID();
         String devSSID = getSelectedSSID();
         if (s1.equals("\"" + devSSID + "\"")) {
-            //TODO 建立socket通信
-
+            connectDevSocket(Constants.TCP_SERVER_IP);
             return;
         }
-
 
         WifiConfiguration wificonf = createWifiConfig(devSSID,"3.14159265",WIFICIPHER_WPA);
         int networkId = mWifiManager.addNetwork(wificonf);
@@ -140,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(mWifiManager.enableNetwork(networkId, true)){
-            showProgress();
+//            showProgress();
         }else {
             Toast.makeText(MainActivity.this,"无法连接设备热点",Toast.LENGTH_SHORT).show();
         }
@@ -163,81 +173,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //建立socket连接
-    private void connectDev(){
-        //
-        final SocketManager sm = SocketManager.getInstance();
-        sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
-            @Override
-            public void onConnect(boolean b) {
-                Log.i("MainActivity","onConnect---------------->"+b);
-                if(b){
-                    MainActivity.this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(clickMode == MODE_OFFLINE) {
-                                startSettingActivity("");
-                            }else if(clickMode == MODE_ONLINE){
-                                if(sm.readData()) {
-                                    sm.writeData(Constants.GIVE_IP);
-                                }else{
-                                    Toast.makeText(MainActivity.this,"无法读取服务端返回的数据",Toast.LENGTH_SHORT).show();
-                                }
-                            }else{
-                                Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-                }
-
-            }
-
-            @Override
-            public void onRead(final String data) {
-                Log.i("MainActivity","onRead---------------->"+data);
-                if("0.0.0.0".equals(data)){
-                    Intent intent = new Intent(MainActivity.this,InputWifiDialogFragment.class);
-                    startActivityForResult(intent,REQUEST_CONFIG_IP);
-
-                }else{
-                    //TODO 恢复到路由器连接
-                    restoreWifiAndConnect(data);
-                }
-
-            }
-
-            @Override
-            public void onWrite(String data,boolean b) {
-                Log.i("MainActivity","onWrite---------------->"+data + "," +b);
-            }
-        });
-
-        sm.connect(Constants.TCP_SERVER_IP);
-
-
-    }
-
     //直连或者通过局域网与设备建立socket通信
     private void connectDevSocket(String ip) {
         SocketManager sm = SocketManager.getInstance();
-        sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
-            @Override
-            public void onConnect(boolean b) {
-                if(b){
-                    startSettingActivity("");
-                }
-            }
-
-            @Override
-            public void onRead(String data) {
-
-            }
-
-            @Override
-            public void onWrite(String hexString, boolean b) {
-
-            }
-        });
+        sm.setSocketOperatorListener(MainActivity.this);
+        sm.setHandler(new Handler());
         sm.connect(ip);
     }
 
@@ -272,12 +212,15 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_yes).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!checkWifi()){
+                    return;
+                }
                 //chanage access point
                 if(getSelectedSSID() == null){
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
-                clickMode = MODE_OFFLINE;
+                connectMode = MODE_OFFLINE;
                 connectDeviceAP();
             }
         });
@@ -285,11 +228,15 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btn_config).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(!checkWifi()){
+                    return;
+                }
+
                 if(getSelectedSSID() == null){
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
-                clickMode = MODE_ONLINE;
+                connectMode = MODE_ONLINE;
                 connectDeviceAP();
             }
         });
@@ -308,11 +255,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        clickMode = 0;
-
+        connectMode = 0;
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
-
+        initWifiNetWorkID = currentWifiInfo.getNetworkId();
     }
 
     @Override
@@ -379,17 +325,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if(requestCode == REQUEST_CONFIG_IP && resultCode == RESULT_OK){
-            String devIp = data.getStringExtra("ip");
-            //TODO 恢复到路由器连接
-            restoreWifiAndConnect(devIp);
+            resultIP = data.getStringExtra("ip");
+            //恢复初始wifi连接,成功后再进行socket连接
+            restoreInitWifi();
             return;
         }
 
     }
 
-    private void restoreWifiAndConnect(String ip) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setMessage("读取设备IP地址成功，请切换到路由器后在再重新操作");
+    private void restoreInitWifi() {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        wifiManager.disconnect();
+        int networkId = initWifiNetWorkID;
+        if (networkId >= 0) {
+            wifiManager.enableNetwork(networkId, true);
+        } else {
+            // 3G
+            wifiManager.setWifiEnabled(false);
+        }
     }
 
     private void updateDevList() {
@@ -402,19 +355,6 @@ public class MainActivity extends AppCompatActivity {
         ((ArrayAdapter)listView.getAdapter()).notifyDataSetChanged();
     }
 
-    //恢复本来的网络状态
-//    public void restoreWifiInfo() {
-//        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-//        wifiManager.disconnect();
-//        int networkId = currentNetWorkId;
-//        if (networkId >= 0) {
-//            wifiManager.enableNetwork(networkId, true);
-//        } else {
-//            // 3G
-//            wifiManager.setWifiEnabled(false);
-//        }
-//
-//    }
 
     private WifiConfiguration isExist(String ssid) {
         List<WifiConfiguration> configs = mWifiManager.getConfiguredNetworks();
@@ -540,4 +480,46 @@ public class MainActivity extends AppCompatActivity {
         return connectMethod;
     }
 
+    @Override
+    public void onSocketConnect(String ip, boolean b) {
+        if(b){
+            if(connectMode == MODE_OFFLINE) {
+                closeProgress();
+                startSettingActivity("");
+            }else if(connectMode == MODE_ONLINE){
+                SocketManager sm = SocketManager.getInstance();
+                sm.setHandler(new Handler());
+                sm.setSocketOperatorListener(MainActivity.this);
+                sm.readData();
+                sm.writeData(Constants.GIVE_IP);
+
+            }else{
+                Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    public void onSocketRead(String ip) {
+
+        if(ip != null) {
+            if("0.0.0.0".equals(ip)){
+                Intent intent = new Intent(MainActivity.this,InputWifiDialogFragment.class);
+                startActivityForResult(intent,REQUEST_CONFIG_IP);
+            }else{
+                resultIP = ip;
+                //恢复到路由器连接
+                restoreInitWifi();
+            }
+
+        }else {
+            Toast.makeText(MainActivity.this,"无法读取服务端返回的数据",Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    @Override
+    public void onSocketWrite(String hexString, boolean b) {
+
+    }
 }

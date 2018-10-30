@@ -329,17 +329,17 @@ public class SettingActivity extends AppCompatActivity
         SocketManager sm = SocketManager.getInstance();
         sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
             @Override
-            public void onConnect(boolean b) {
+            public void onSocketConnect(String ip,boolean b) {
 
             }
 
             @Override
-            public void onRead(String data) {
+            public void onSocketRead(String data) {
 
             }
 
             @Override
-            public void onWrite(String hexString, boolean b) {
+            public void onSocketWrite(String hexString, boolean b) {
                 if(BytesHexStrTranslate.bytesToHexFun2(command).equals(hexString)){
                     if(b){
                         result.sendCommandSuccess();

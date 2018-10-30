@@ -122,12 +122,12 @@ public class InputWifiDialogFragment extends AppCompatActivity {
         SocketManager sm = SocketManager.getInstance();
         sm.setSocketOperatorListener(new SocketManager.SocketOperatorListener() {
             @Override
-            public void onConnect(boolean b) {
+            public void onSocketConnect(String ip,boolean b) {
 
             }
 
             @Override
-            public void onRead(String data) {
+            public void onSocketRead(String data) {
                 progressDialog.dismiss();
                 if("0.0.0.0".equals(data)){
                     Toast.makeText(InputWifiDialogFragment.this,"配置路由器失败",Toast.LENGTH_SHORT).show();
@@ -140,7 +140,7 @@ public class InputWifiDialogFragment extends AppCompatActivity {
             }
 
             @Override
-            public void onWrite(String hexString, boolean b) {
+            public void onSocketWrite(String hexString, boolean b) {
                 if(b){
                     progressDialog.setMessage("正在配置路由器信息...");
                     progressDialog.show();
