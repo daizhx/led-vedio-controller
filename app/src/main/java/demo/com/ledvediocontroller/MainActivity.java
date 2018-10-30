@@ -49,8 +49,16 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
     //连接模式
     private int connectMode;
+    private static final int MODE_NONE = 0;
     private static final int MODE_ONLINE = 1;
     private static final int MODE_OFFLINE = 2;
+
+    //连接设备状态
+    private int connectStatus;
+    private static final int DISCONNECTED = 0;
+    private static final int CONNECTING = 1;
+    private static final int CONNECTED = 2;
+
 
     //初始状态的wifi网络 -1没有wifi网络连接
     private int initWifiNetWorkID = -1;
@@ -104,19 +112,24 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         String ssid = wifiInfo.getSSID();
 
         String devSSID = getSelectedSSID();
-        //是否连接到目标AP
+        //连接到了设备AP
         if(ssid.equals("\"" + devSSID + "\"")){
             //连接到设备AP,会广播2次，所以通过变量isConnectedDeviceAP控制，处理一次
-            if(progressDialog.isShowing()){
+            if(connectStatus == CONNECTING){
                 connectDevSocket(Constants.TCP_SERVER_IP);
             }
-
         }
 
-        if(networkID == initWifiNetWorkID){
-            //恢复路由器网络
+        //恢复到了路由器AP
+        if(networkID == initWifiNetWorkID && connectStatus == CONNECTING && connectMode == MODE_ONLINE){
             connectDevSocket(resultIP);
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        connectMode = MODE_NONE;
     }
 
     private boolean checkWifi(){
@@ -221,6 +234,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
                     return;
                 }
                 connectMode = MODE_OFFLINE;
+                connectStatus = CONNECTING;
                 connectDeviceAP();
             }
         });
@@ -237,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
                     return;
                 }
                 connectMode = MODE_ONLINE;
+                connectStatus = CONNECTING;
                 connectDeviceAP();
             }
         });
@@ -256,6 +271,8 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
     private void initData() {
         connectMode = 0;
+        connectStatus = DISCONNECTED;
+
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
         initWifiNetWorkID = currentWifiInfo.getNetworkId();
@@ -325,6 +342,9 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         }
 
         if(requestCode == REQUEST_CONFIG_IP && resultCode == RESULT_OK){
+            showProgress();
+            connectMode = MODE_ONLINE;
+            connectStatus = CONNECTING;
             resultIP = data.getStringExtra("ip");
             //恢复初始wifi连接,成功后再进行socket连接
             restoreInitWifi();
@@ -483,15 +503,26 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
     @Override
     public void onSocketConnect(String ip, boolean b) {
         if(b){
-            if(connectMode == MODE_OFFLINE) {
+            if(connectMode == MODE_OFFLINE && connectStatus == CONNECTING) {
                 closeProgress();
                 startSettingActivity("");
+                connectStatus = CONNECTED;
+                connectMode = MODE_NONE;
             }else if(connectMode == MODE_ONLINE){
-                SocketManager sm = SocketManager.getInstance();
-                sm.setHandler(new Handler());
-                sm.setSocketOperatorListener(MainActivity.this);
-                sm.readData();
-                sm.writeData(Constants.GIVE_IP);
+                //这里有2种情况，第一次连接时用来询问局域网内的ip，第二次才是真正连接
+                if(connectStatus == CONNECTING) {
+                    SocketManager sm = SocketManager.getInstance();
+                    sm.setHandler(new Handler());
+                    sm.setSocketOperatorListener(MainActivity.this);
+                    sm.readData();
+                    sm.writeData(Constants.GIVE_IP);
+                    connectStatus = DISCONNECTED;
+                }else {
+                    closeProgress();
+                    startSettingActivity("");
+                    connectStatus = CONNECTED;
+                    connectMode = MODE_NONE;
+                }
 
             }else{
                 Toast.makeText(MainActivity.this,"内部错误001",Toast.LENGTH_LONG).show();
@@ -504,6 +535,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         if(ip != null) {
             if("0.0.0.0".equals(ip)){
+                closeProgress();
                 Intent intent = new Intent(MainActivity.this,InputWifiDialogFragment.class);
                 startActivityForResult(intent,REQUEST_CONFIG_IP);
             }else{
