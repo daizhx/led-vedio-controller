@@ -24,6 +24,8 @@ import android.widget.Toast;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import demo.com.ledvediocontroller.fragments.InputWifiDialogFragment;
 import demo.com.ledvediocontroller.util.SharePreferencesUtil;
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
     //初始状态的wifi网络 -1没有wifi网络连接
     private int initWifiNetWorkID = -1;
+    private String initSSID;
 
     //用来临时保存询问回来的的设备IP地址
     private String resultIP;
@@ -141,20 +144,29 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         return true;
     }
 
-    //尝试连接设备AP
-    private void connectDeviceAP() {
-        showProgress();
-        //如果已经连接直接进入
+
+    //获取wifi连接热点的ssid，去掉了前后的双引号
+    private String getCurWifiSSID(){
         WifiManager mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
-        String s1 = currentWifiInfo.getSSID();
-        String devSSID = getSelectedSSID();
-        if (s1.equals("\"" + devSSID + "\"")) {
-            connectDevSocket(Constants.TCP_SERVER_IP);
-            return;
+        String ssid = currentWifiInfo.getSSID();
+        Pattern pattern = Pattern.compile("^\"(.+)\"$");
+        Matcher m = pattern.matcher(ssid);
+        if(m.find()) {
+            return m.group(1);
+        }else{
+            return ssid;
         }
-
-        WifiConfiguration wificonf = createWifiConfig(devSSID,"3.14159265",WIFICIPHER_WPA);
+    }
+    /**
+     * 使系统去连接wifi热点，连接结果需注册广播接收器接收系统的广播通知获取
+     * 该不能很好的根据结果做出相应的操作，因为确定某次接收到的通知是调用该操作导致的。
+     *
+     * @param ssid
+     */
+    private void connectWifi(String ssid) {
+        WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
+        WifiConfiguration wificonf = createWifiConfig(ssid,"3.14159265",WIFICIPHER_WPA);
         int networkId = mWifiManager.addNetwork(wificonf);
 
         int currentNetWorkId = currentWifiInfo.getNetworkId();
@@ -163,20 +175,20 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         }
 
         if(mWifiManager.enableNetwork(networkId, true)){
-//            showProgress();
+            showProgress("连接"+ssid+"...");
         }else {
             Toast.makeText(MainActivity.this,"无法连接设备热点",Toast.LENGTH_SHORT).show();
         }
     }
 
     //显示正在切换到的设备AP的进度条
-    private void showProgress() {
+    private void showProgress(String msg) {
 
         if(progressDialog == null) {
             progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("正在连接设备,请稍后。。。");
             progressDialog.setCanceledOnTouchOutside(false);
         }
+        progressDialog.setMessage(msg);
         progressDialog.show();
     }
 
@@ -192,6 +204,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         sm.setSocketOperatorListener(MainActivity.this);
         sm.setHandler(new Handler());
         sm.connect(ip);
+        showProgress(String.format("正在连接设备(%s)...",ip));
     }
 
     //参数ssid没用了
@@ -233,9 +246,15 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
                     Toast.makeText(MainActivity.this,"请选择要连接的设备！",Toast.LENGTH_SHORT).show();
                     return;
                 }
+
                 connectMode = MODE_OFFLINE;
                 connectStatus = CONNECTING;
-                connectDeviceAP();
+                if(getCurWifiSSID().equals(getSelectedSSID())){
+                    //已连接wifi
+                    connectDevSocket(Constants.TCP_SERVER_IP);
+                }else {
+                    connectWifi(getSelectedSSID());
+                }
             }
         });
 
@@ -252,7 +271,13 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
                 }
                 connectMode = MODE_ONLINE;
                 connectStatus = CONNECTING;
-                connectDeviceAP();
+
+                if(getCurWifiSSID().equals(getSelectedSSID())){
+                    //已连接wifi
+                    connectDevSocket(Constants.TCP_SERVER_IP);
+                }else {
+                    connectWifi(getSelectedSSID());
+                }
             }
         });
 
@@ -276,6 +301,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo currentWifiInfo = mWifiManager.getConnectionInfo();
         initWifiNetWorkID = currentWifiInfo.getNetworkId();
+        initSSID = currentWifiInfo.getSSID();
     }
 
     @Override
@@ -342,7 +368,6 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         }
 
         if(requestCode == REQUEST_CONFIG_IP && resultCode == RESULT_OK){
-            showProgress();
             connectMode = MODE_ONLINE;
             connectStatus = CONNECTING;
             resultIP = data.getStringExtra("ip");
@@ -356,12 +381,12 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
     private void restoreInitWifi() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         wifiManager.disconnect();
-        int networkId = initWifiNetWorkID;
-        if (networkId >= 0) {
-            wifiManager.enableNetwork(networkId, true);
+        if (initWifiNetWorkID >= 0) {
+            wifiManager.enableNetwork(initWifiNetWorkID, true);
+            showProgress("连接" + initSSID + "...");
         } else {
             // 3G
-            wifiManager.setWifiEnabled(false);
+//            wifiManager.setWifiEnabled(false);
         }
     }
 
@@ -517,6 +542,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
                     sm.readData();
                     sm.writeData(Constants.GIVE_IP);
                     connectStatus = DISCONNECTED;
+                    showProgress("查询设备的ip地址...");
                 }else {
                     closeProgress();
                     startSettingActivity("");
