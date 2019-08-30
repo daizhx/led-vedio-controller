@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
     //参数ssid没用了
     private void startSettingActivity(String ssid) {
-        Intent intent = new Intent(MainActivity.this,SettingActivity.class);
+        Intent intent = new Intent(MainActivity.this,SettingActivity2.class);
         intent.putExtra("ssid",ssid);
         startActivityForResult(intent,REQUEST_SETTING);
     }
