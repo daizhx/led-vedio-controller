@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
+//黄卷自己客户设备控制界面
 public class SettingActivity2 extends SettingActivity {
 
     EditText editText;
@@ -39,10 +40,16 @@ public class SettingActivity2 extends SettingActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 //                Log.d("daizhx","onTextChanged--------->" + s + ",start="+start+",count="+count+",before="+before);
+                if(before == 1 && count == 0){
+                    //退格操作
+                    byte[] bytes = {0x00,0x08};
+                    sendCommand(getKeyboardCommand(bytes));
+                    return;
+                }
                 if(s.length() > 0) {
                     char c = s.charAt(s.length() - 1);
                     byte[] bytes = charToByte(c);
-                    getKeyboardCommand(bytes);
+                    sendCommand(getKeyboardCommand(bytes));
                 }
 
             }
@@ -88,9 +95,50 @@ public class SettingActivity2 extends SettingActivity {
                 }
             });
 
+            //当前两点之间的距离
+            float curDistance;
+            //上一次两点之间的距离
+            float lastDistance;
+            //放大缩小的阀值
+            float threshold = 5;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                gestureDetector.onTouchEvent(event);
+                if(event.getPointerCount() == 2){
+                    //计算两触点之间的距离
+                    float offsetX = event.getX(0) - event.getX(1);
+                    float offsetY = event.getY(0) - event.getY(1);
+                    curDistance = (float) Math.sqrt(offsetX*offsetX + offsetY*offsetY);
+
+                    if(event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN && event.getActionIndex() == 1){
+                        //开始两点触摸操作
+                        lastDistance = curDistance;
+                        return true;
+                    }
+
+                    if(event.getActionMasked() == MotionEvent.ACTION_POINTER_UP && event.getActionIndex() == 1){
+                        //结束两触摸操作
+                        lastDistance = 0;
+                        return true;
+                    }
+
+                    if(lastDistance == 0){
+                        lastDistance = curDistance;
+                    }
+
+                    if(curDistance - lastDistance > threshold){
+                        //放大
+                        scaleUp();
+                        lastDistance = curDistance;
+                    }else if(lastDistance - curDistance > threshold){
+                        //缩小
+                        scaleDown();
+                        lastDistance = curDistance;
+                    }
+
+                }else if(event.getPointerCount() == 1){
+                    gestureDetector.onTouchEvent(event);
+                }
                 return true;
             }
         });
@@ -219,6 +267,16 @@ public class SettingActivity2 extends SettingActivity {
             }
         });
 
+    }
+
+    //放大
+    private void scaleUp(){
+        sendCommand(getMouseCommand((byte) 0x06));
+    }
+
+    //缩小
+    private void scaleDown(){
+        sendCommand(getMouseCommand((byte)0x07));
     }
 
     private void mouseMove(float distanceX, float distanceY) {

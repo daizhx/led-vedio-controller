@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LED视频处理器</string>
+    <string name="app_name">VRDS控制中心</string>
     <string name="search_device">搜索设备</string>
     <string name="search_again">重新扫描</string>
     <string name="signal_resource">信号源</string>
