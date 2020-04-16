@@ -1,0 +1,25 @@
+###这是个记录git使用实验的文件
+
+1,通过git init命令我在当前目录下创建了一个git仓库.git目录。
+这个目录包含了:
+--hooks
+  -xxx.sample
+--info
+  -exclude
+--objects
+  --info
+  --pack
+--refs
+  --heads
+  --tags
+-config
+-description
+-HEAD
+
+题外话，vim删除光标到行尾之间的内容的快捷键是d$。
+
+言归正传，上面这些目录和文件的作用是什么，我不知道，等以后搞懂了，再来补充。
+
+2,通过git add命令把这个文件添加到仓库后，.git目录下面多了index文件，以及objects目录下面多了一个c8目录及跟目录下一个hash值命名的文件。
+
+
