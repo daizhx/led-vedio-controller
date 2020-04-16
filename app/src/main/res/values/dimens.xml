@@ -1,0 +1,13 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="setting_menu_gap">32dp</dimen>
+    <dimen name="bottomBarHeight">36dp</dimen>
+    <dimen name="setting_menu_top_gap">48dp</dimen>
+    <dimen name="list_menu_text_size">20sp</dimen>
+    <dimen name="rect_corner_ratio">5dp</dimen>
+
+    <!--信号源界面设置layer长条区域之间的间距-->
+    <dimen name="layer_btn_gap">8dp</dimen>
+</resources>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".SettingActivity2"
+    android:orientation="vertical">
+
+    <View android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:id="@+id/view_touch"
+        android:background="@android:color/darker_gray"/>
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/activity_vertical_margin">
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="鼠标左键"
+            tools:ignore="MissingConstraints"
+            android:id="@+id/btn_mouse_left"/>
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="上翻"
+            app:layout_constraintTop_toBottomOf="@id/btn_mouse_left"
+            android:id="@+id/btn_page_up"
+            tools:ignore="MissingConstraints" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="下翻"
+            app:layout_constraintTop_toBottomOf="@id/btn_page_up"
+            android:id="@+id/btn_page_down"
+            tools:ignore="MissingConstraints" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/scrollbar"
+            app:layout_constraintRight_toRightOf="parent"
+            android:id="@+id/iv_scroller"
+            tools:ignore="MissingConstraints" />
+
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintRight_toLeftOf="@+id/iv_scroller"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:text="鼠标右键"
+            tools:ignore="MissingConstraints"
+            android:id="@+id/btn_mouse_right"/>
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="截图"
+            app:layout_constraintTop_toBottomOf="@id/btn_mouse_left"
+            app:layout_constraintRight_toRightOf="@id/btn_mouse_right"
+            android:id="@+id/btn_capture"
+            tools:ignore="MissingConstraints" />
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="删除"
+            app:layout_constraintTop_toBottomOf="@id/btn_page_up"
+            app:layout_constraintRight_toRightOf="@id/btn_mouse_right"
+            android:id="@+id/btn_del"
+            tools:ignore="MissingConstraints" />
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_arrow_upward_black_48dp"
+            app:layout_constraintLeft_toLeftOf="@id/btn_mouse_left"
+            app:layout_constraintRight_toRightOf="@id/btn_mouse_right"
+            app:layout_constraintTop_toTopOf="parent"
+            android:id="@+id/btn_up"
+            android:layout_marginTop="@dimen/activity_vertical_margin"/>
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:id="@+id/btn_down"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:src="@mipmap/ic_arrow_downward_black_48dp"
+            app:layout_constraintLeft_toLeftOf="@id/btn_up"
+            app:layout_constraintTop_toBottomOf="@id/btn_up" />
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_arrow_back_black_48dp"
+            app:layout_constraintRight_toLeftOf="@id/btn_down"
+            app:layout_constraintTop_toTopOf="@id/btn_down"
+            android:id="@+id/btn_left"/>
+
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@mipmap/ic_arrow_forward_black_48dp"
+            app:layout_constraintLeft_toRightOf="@id/btn_down"
+            app:layout_constraintTop_toTopOf="@id/btn_down"
+            android:id="@+id/btn_right"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/edit"/>
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="弹出键盘"
+            android:id="@+id/btn_show_key_board"
+            android:layout_gravity="bottom|center_horizontal"/>
+    </FrameLayout>
+</LinearLayout>
